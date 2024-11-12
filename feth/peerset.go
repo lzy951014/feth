@@ -26,6 +26,7 @@ import (
 	"github.com/ethereum/go-ethereum/eth/protocols/eth"
 	"github.com/ethereum/go-ethereum/eth/protocols/snap"
 	"github.com/ethereum/go-ethereum/p2p"
+	"github.com/lzy951014/feth/feth/protocols/bsc"
 )
 
 var (
@@ -44,6 +45,10 @@ var (
 	// errSnapWithoutEth is returned if a peer attempts to connect only on the
 	// snap protocol without advertising the eth main protocol.
 	errSnapWithoutEth = errors.New("peer connected on snap without compatible eth support")
+
+	// errBscWithoutEth is returned if a peer attempts to connect only on the
+	// bsc protocol without advertising the eth main protocol.
+	errBscWithoutEth = errors.New("peer connected on bsc without compatible eth support")
 )
 
 // peerSet represents the collection of active peers currently participating in
@@ -54,6 +59,9 @@ type peerSet struct {
 
 	snapWait map[string]chan *snap.Peer // Peers connected on `eth` waiting for their snap extension
 	snapPend map[string]*snap.Peer      // Peers connected on the `snap` protocol, but not yet on `eth`
+
+	bscWait map[string]chan *bsc.Peer // Peers connected on `eth` waiting for their bsc extension
+	bscPend map[string]*bsc.Peer      // Peers connected on the `bsc` protocol, but not yet on `eth`
 
 	lock   sync.RWMutex
 	closed bool
@@ -67,6 +75,8 @@ func newPeerSet() *peerSet {
 		snapWait: make(map[string]chan *snap.Peer),
 		snapPend: make(map[string]*snap.Peer),
 		quitCh:   make(chan struct{}),
+		bscWait:  make(map[string]chan *bsc.Peer),
+		bscPend:  make(map[string]*bsc.Peer),
 	}
 }
 
@@ -140,6 +150,36 @@ func (ps *peerSet) waitSnapExtension(peer *eth.Peer) (*snap.Peer, error) {
 		ps.lock.Unlock()
 		return nil, errPeerSetClosed
 	}
+}
+
+// registerBscExtension unblocks an already connected `eth` peer waiting for its
+// `bsc` extension, or if no such peer exists, tracks the extension for the time
+// being until the `eth` main protocol starts looking for it.
+func (ps *peerSet) registerBscExtension(peer *bsc.Peer) error {
+	// Reject the peer if it advertises `bsc` without `eth` as `bsc` is only a
+	// satellite protocol meaningful with the chain selection of `eth`
+	if !peer.RunningCap(eth.ProtocolName, eth.ProtocolVersions) {
+		return errBscWithoutEth
+	}
+	// Ensure nobody can double connect
+	ps.lock.Lock()
+	defer ps.lock.Unlock()
+
+	id := peer.ID()
+	if _, ok := ps.peers[id]; ok {
+		return errPeerAlreadyRegistered // avoid connections with the same id as existing ones
+	}
+	if _, ok := ps.bscPend[id]; ok {
+		return errPeerAlreadyRegistered // avoid connections with the same id as pending ones
+	}
+	// Inject the peer into an `eth` counterpart is available, otherwise save for later
+	if wait, ok := ps.bscWait[id]; ok {
+		delete(ps.bscWait, id)
+		wait <- peer
+		return nil
+	}
+	ps.bscPend[id] = peer
+	return nil
 }
 
 // registerPeer injects a new `eth` peer into the working set, or returns an error

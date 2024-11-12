@@ -7,6 +7,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/lzy951014/feth/feth/protocols/bsc"
 	p2p "github.com/lzy951014/feth/fp2p"
 	"github.com/lzy951014/feth/fp2p/enode"
 	"github.com/lzy951014/feth/fp2p/nat"

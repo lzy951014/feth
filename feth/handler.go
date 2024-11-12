@@ -42,6 +42,8 @@ import (
 	"github.com/ethereum/go-ethereum/metrics"
 	"github.com/ethereum/go-ethereum/p2p"
 	"github.com/ethereum/go-ethereum/triedb/pathdb"
+	typess "github.com/lzy951014/feth/fcore/types"
+	"github.com/lzy951014/feth/feth/protocols/bsc"
 )
 
 const (
@@ -81,6 +83,17 @@ type txPool interface {
 	SubscribeTransactions(ch chan<- core.NewTxsEvent, reorgs bool) event.Subscription
 }
 
+// votePool defines the methods needed from a votes pool implementation to
+// support all the operations needed by the Ethereum chain protocols.
+type votePool interface {
+	PutVote(vote *typess.VoteEnvelope)
+	GetVotes() []*typess.VoteEnvelope
+
+	// SubscribeNewVoteEvent should return an event subscription of
+	// NewVotesEvent and send events to the given channel.
+	SubscribeNewVoteEvent(ch chan<- core.NewVoteEvent) event.Subscription
+}
+
 // handlerConfig is the collection of initialization parameters to create a full
 // node network handler.
 type handlerConfig struct {
@@ -104,6 +117,7 @@ type handler struct {
 
 	database ethdb.Database
 	txpool   txPool
+	votepool votePool
 	chain    *core.BlockChain
 	maxPeers int
 
@@ -689,4 +703,28 @@ func (h *handler) enableSyncedFeatures() {
 	if h.chain.TrieDB().Scheme() == rawdb.PathScheme {
 		h.chain.TrieDB().SetBufferSize(pathdb.DefaultBufferSize)
 	}
+}
+
+// runBscExtension registers a `bsc` peer into the joint eth/bsc peerset and
+// starts handling inbound messages. As `bsc` is only a satellite protocol to
+// `eth`, all subsystem registrations and lifecycle management will be done by
+// the main `eth` handler to prevent strange races.
+func (h *handler) runBscExtension(peer *bsc.Peer, handler bsc.Handler) error {
+	if !h.incHandlers() {
+		return p2p.DiscQuitting
+	}
+	defer h.decHandlers()
+
+	if err := h.peers.registerBscExtension(peer); err != nil {
+		if metrics.Enabled {
+			if peer.Inbound() {
+				bsc.IngressRegistrationErrorMeter.Mark(1)
+			} else {
+				bsc.EgressRegistrationErrorMeter.Mark(1)
+			}
+		}
+		peer.Log().Error("Bsc extension registration failed", "err", err)
+		return err
+	}
+	return handler(peer)
 }
