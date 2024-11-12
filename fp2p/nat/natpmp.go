@@ -23,7 +23,7 @@ import (
 	"time"
 
 	natpmp "github.com/jackpal/go-nat-pmp"
-	"github.com/lzy951014/feth/common/gopool"
+	"github.com/lzy951014/feth/fcommon/gopool"
 )
 
 // natPMPClient adapts the NAT-PMP protocol implementation so it conforms to
