@@ -2,7 +2,7 @@
  * @Author: Liuzongyun 845666459@qq.com
  * @Date: 2024-11-12 15:37:44
  * @LastEditors: Liuzongyun 845666459@qq.com
- * @LastEditTime: 2024-11-12 15:38:11
+ * @LastEditTime: 2024-11-12 17:05:39
  * @FilePath: /feth/fcore/events.go
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
@@ -26,36 +26,36 @@ package core
 
 import (
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/types"
+	// "github.com/lzy951014/feth/fcore/types"
 	typess "github.com/lzy951014/feth/fcore/types"
 )
 
 // NewTxsEvent is posted when a batch of transactions enters the transaction pool.
-type NewTxsEvent struct{ Txs []*types.Transaction }
+type NewTxsEvent struct{ Txs []*typess.Transaction }
 
 // ReannoTxsEvent is posted when a batch of local pending transactions exceed a specified duration.
-type ReannoTxsEvent struct{ Txs []*types.Transaction }
+type ReannoTxsEvent struct{ Txs []*typess.Transaction }
 
 // NewMinedBlockEvent is posted when a block has been imported.
-type NewMinedBlockEvent struct{ Block *types.Block }
+type NewMinedBlockEvent struct{ Block *typess.Block }
 
 // RemovedLogsEvent is posted when a reorg happens
-type RemovedLogsEvent struct{ Logs []*types.Log }
+type RemovedLogsEvent struct{ Logs []*typess.Log }
 
 // NewVoteEvent is posted when a batch of votes enters the vote pool.
 type NewVoteEvent struct{ Vote *typess.VoteEnvelope }
 
 // FinalizedHeaderEvent is posted when a finalized header is reached.
-type FinalizedHeaderEvent struct{ Header *types.Header }
+type FinalizedHeaderEvent struct{ Header *typess.Header }
 
 type ChainEvent struct {
-	Block *types.Block
+	Block *typess.Block
 	Hash  common.Hash
-	Logs  []*types.Log
+	Logs  []*typess.Log
 }
 
 type ChainSideEvent struct {
-	Block *types.Block
+	Block *typess.Block
 }
 
-type ChainHeadEvent struct{ Block *types.Block }
+type ChainHeadEvent struct{ Block *typess.Block }

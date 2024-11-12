@@ -58,6 +58,7 @@ var Defaults = Config{
 	TrieCleanCache:     154,
 	TrieDirtyCache:     256,
 	TrieTimeout:        60 * time.Minute,
+	TriesInMemory:      128,
 	SnapshotCache:      102,
 	FilterLogCacheSize: 32,
 	Miner:              miner.DefaultConfig,
@@ -82,11 +83,15 @@ type Config struct {
 	NetworkId uint64
 	SyncMode  downloader.SyncMode
 
+	DisablePeerTxBroadcast bool
+
 	// This can be set to list of enrtree:// URLs which will be queried for
 	// for nodes to connect to.
-	EthDiscoveryURLs  []string
-	SnapDiscoveryURLs []string
-	BscDiscoveryURLs  []string
+	EthDiscoveryURLs    []string
+	SnapDiscoveryURLs   []string
+	BscDiscoveryURLs    []string
+	DirectBroadcast     bool
+	DisableSnapProtocol bool // Whether disable snap protocol
 
 	NoPruning  bool // Whether to disable pruning and flush everything to disk
 	NoPrefetch bool // Whether to disable prefetching and only load state on demand
@@ -95,6 +100,7 @@ type Config struct {
 	TxLookupLimit      uint64 `toml:",omitempty"` // The maximum number of blocks from head whose tx indices are reserved.
 	TransactionHistory uint64 `toml:",omitempty"` // The maximum number of blocks from head whose tx indices are reserved.
 	StateHistory       uint64 `toml:",omitempty"` // The maximum number of blocks from head whose state histories are reserved.
+	PathSyncFlush      bool   `toml:",omitempty"` // State scheme used to store ethereum state and merkle trie nodes on top
 
 	// State scheme represents the scheme used to store ethereum states and trie
 	// nodes on top. It can be 'hash', 'path', or none which means use the scheme
@@ -124,7 +130,10 @@ type Config struct {
 	TrieDirtyCache int
 	TrieTimeout    time.Duration
 	SnapshotCache  int
-	Preimages      bool
+	TriesInMemory  uint64
+
+	// TriesVerifyMode core.VerifyMode
+	Preimages bool
 
 	// This is the number of blocks for which logs will be cached in the filter system.
 	FilterLogCacheSize int
