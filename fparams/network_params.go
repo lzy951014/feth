@@ -1,3 +1,11 @@
+/*
+ * @Author: Liuzongyun 845666459@qq.com
+ * @Date: 2024-11-12 10:35:59
+ * @LastEditors: Liuzongyun 845666459@qq.com
+ * @LastEditTime: 2024-11-12 10:41:50
+ * @FilePath: /feth/fparams/network_params.go
+ * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
+ */
 // Copyright 2017 The go-ethereum Authors
 // This file is part of the go-ethereum library.
 //
@@ -14,7 +22,7 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
 
-package params
+package fparams
 
 // These are network parameters that need to be constant between clients, but
 // aren't necessarily consensus related.
