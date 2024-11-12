@@ -29,7 +29,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/eth/tracers"
-	jsassets "github.com/ethereum/go-ethereum/eth/tracers/js/internal/tracers"
+	jsassets "github.com/lzy951014/feth/feth/tracers/js/internal/tracers"
 )
 
 var assetTracers = make(map[string]string)
