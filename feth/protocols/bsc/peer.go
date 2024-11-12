@@ -5,10 +5,11 @@ import (
 
 	mapset "github.com/deckarep/golang-set/v2"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/types"
+
+	// "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/log"
 
-	// "github.com/lzy951014/feth/fcore/types"
+	"github.com/lzy951014/feth/fcore/types"
 
 	// "github.com/ethereum/go-ethereum/p2p"
 	p2p "github.com/lzy951014/feth/fp2p"

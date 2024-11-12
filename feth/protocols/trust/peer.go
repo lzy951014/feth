@@ -1,3 +1,11 @@
+/*
+ * @Author: Liuzongyun 845666459@qq.com
+ * @Date: 2024-11-12 11:40:00
+ * @LastEditors: Liuzongyun 845666459@qq.com
+ * @LastEditTime: 2024-11-12 11:55:31
+ * @FilePath: /feth/feth/protocols/trust/peer.go
+ * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
+ */
 package trust
 
 import (
@@ -5,7 +13,9 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/p2p"
+
+	// "github.com/ethereum/go-ethereum/p2p"
+	p2p "github.com/lzy951014/feth/fp2p"
 )
 
 // Peer is a collection of relevant information we have about a `trust` peer.

@@ -1,12 +1,20 @@
+/*
+ * @Author: Liuzongyun 845666459@qq.com
+ * @Date: 2024-11-12 11:59:39
+ * @LastEditors: Liuzongyun 845666459@qq.com
+ * @LastEditTime: 2024-11-12 12:02:03
+ * @FilePath: /feth/fcore/monitor/malicious_vote_monitor.go
+ * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
+ */
 package monitor
 
 import (
 	"encoding/json"
 
-	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/metrics"
 	lru "github.com/hashicorp/golang-lru"
+	"github.com/lzy951014/feth/fcore/types"
 )
 
 // follow define in core/vote
