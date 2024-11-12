@@ -56,6 +56,12 @@ const (
 	// All transactions with a higher size will be announced and need to be fetched
 	// by the peer.
 	txMaxBroadcastSize = 4096
+
+	// deltaTdThreshold is the threshold of TD difference for peers to broadcast votes.
+	deltaTdThreshold = 20
+
+	// voteChanSize is the size of channel listening to NewVotesEvent.
+	voteChanSize = 256
 )
 
 var syncChallengeTimeout = 15 * time.Second // Time allowance for a node to reply to the sync progress challenge
@@ -352,6 +358,11 @@ func (h *handler) runEthPeer(peer *eth.Peer, handler eth.Handler) error {
 		peer.Log().Error("Snapshot extension barrier failed", "err", err)
 		return err
 	}
+	bsc, err := h.peers.waitBscExtension(peer)
+	if err != nil {
+		peer.Log().Error("Bsc extension barrier failed", "err", err)
+		return err
+	}
 
 	// Execute the Ethereum handshake
 	var (
@@ -386,7 +397,7 @@ func (h *handler) runEthPeer(peer *eth.Peer, handler eth.Handler) error {
 	peer.Log().Debug("Ethereum peer connected", "name", peer.Name())
 
 	// Register the peer locally
-	if err := h.peers.registerPeer(peer, snap); err != nil {
+	if err := h.peers.registerPeer(peer, snap, bsc); err != nil {
 		peer.Log().Error("Ethereum peer registration failed", "err", err)
 		return err
 	}
@@ -412,6 +423,9 @@ func (h *handler) runEthPeer(peer *eth.Peer, handler eth.Handler) error {
 	// Propagate existing transactions. new transactions appearing
 	// after this will be sent via broadcasts.
 	h.syncTransactions(peer)
+	if h.votepool != nil && p.bscExt != nil {
+		h.syncVotes(p.bscExt)
+	}
 
 	// Create a notification channel for pending requests if the peer goes down
 	dead := make(chan struct{})
@@ -482,6 +496,30 @@ func (h *handler) runSnapExtension(peer *snap.Peer, handler snap.Handler) error 
 			}
 		}
 		peer.Log().Debug("Snapshot extension registration failed", "err", err)
+		return err
+	}
+	return handler(peer)
+}
+
+// runBscExtension registers a `bsc` peer into the joint eth/bsc peerset and
+// starts handling inbound messages. As `bsc` is only a satellite protocol to
+// `eth`, all subsystem registrations and lifecycle management will be done by
+// the main `eth` handler to prevent strange races.
+func (h *handler) runBscExtension(peer *bsc.Peer, handler bsc.Handler) error {
+	if !h.incHandlers() {
+		return p2p.DiscQuitting
+	}
+	defer h.decHandlers()
+
+	if err := h.peers.registerBscExtension(peer); err != nil {
+		if metrics.Enabled {
+			if peer.Inbound() {
+				bsc.IngressRegistrationErrorMeter.Mark(1)
+			} else {
+				bsc.EgressRegistrationErrorMeter.Mark(1)
+			}
+		}
+		peer.Log().Error("Bsc extension registration failed", "err", err)
 		return err
 	}
 	return handler(peer)
@@ -706,26 +744,33 @@ func (h *handler) enableSyncedFeatures() {
 	}
 }
 
-// runBscExtension registers a `bsc` peer into the joint eth/bsc peerset and
-// starts handling inbound messages. As `bsc` is only a satellite protocol to
-// `eth`, all subsystem registrations and lifecycle management will be done by
-// the main `eth` handler to prevent strange races.
-func (h *handler) runBscExtension(peer *bsc.Peer, handler bsc.Handler) error {
-	if !h.incHandlers() {
-		return p2p.DiscQuitting
-	}
-	defer h.decHandlers()
+// BroadcastVote will propagate a batch of votes to all peers
+// which are not known to already have the given vote.
+func (h *handler) BroadcastVote(vote *typess.VoteEnvelope) {
+	var (
+		directCount int // Count of announcements made
+		directPeers int
 
-	if err := h.peers.registerBscExtension(peer); err != nil {
-		if metrics.Enabled {
-			if peer.Inbound() {
-				bsc.IngressRegistrationErrorMeter.Mark(1)
-			} else {
-				bsc.EgressRegistrationErrorMeter.Mark(1)
-			}
+		voteMap = make(map[*ethPeer]*typess.VoteEnvelope) // Set peer->hash to transfer directly
+	)
+
+	// Broadcast vote to a batch of peers not knowing about it
+	peers := h.peers.peersWithoutVote(vote.Hash())
+	headBlock := h.chain.CurrentBlock()
+	currentTD := h.chain.GetTd(headBlock.Hash(), headBlock.Number.Uint64())
+	for _, peer := range peers {
+		_, peerTD := peer.Head()
+		deltaTD := new(big.Int).Abs(new(big.Int).Sub(currentTD, peerTD))
+		if deltaTD.Cmp(big.NewInt(deltaTdThreshold)) < 1 && peer.bscExt != nil {
+			voteMap[peer] = vote
 		}
-		peer.Log().Error("Bsc extension registration failed", "err", err)
-		return err
 	}
-	return handler(peer)
+
+	for peer, _vote := range voteMap {
+		directPeers++
+		directCount += 1
+		votes := []*typess.VoteEnvelope{_vote}
+		peer.bscExt.AsyncSendVotes(votes)
+	}
+	log.Debug("Vote broadcast", "vote packs", directPeers, "broadcast vote", directCount)
 }

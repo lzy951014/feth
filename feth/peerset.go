@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"math/big"
 	"sync"
+	"time"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/eth/protocols/eth"
@@ -49,6 +50,16 @@ var (
 	// errBscWithoutEth is returned if a peer attempts to connect only on the
 	// bsc protocol without advertising the eth main protocol.
 	errBscWithoutEth = errors.New("peer connected on bsc without compatible eth support")
+
+	// errPeerWaitTimeout is returned if a peer waits extension for too long
+	errPeerWaitTimeout = errors.New("peer wait timeout")
+)
+
+const (
+	// extensionWaitTimeout is the maximum allowed time for the extension wait to
+	// complete before dropping the connection as malicious.
+	extensionWaitTimeout = 10 * time.Second
+	tryWaitTimeout       = 100 * time.Millisecond
 )
 
 // peerSet represents the collection of active peers currently participating in
@@ -182,9 +193,68 @@ func (ps *peerSet) registerBscExtension(peer *bsc.Peer) error {
 	return nil
 }
 
+// waitBscExtension blocks until all satellite protocols are connected and tracked
+// by the peerset.
+func (ps *peerSet) waitBscExtension(peer *eth.Peer) (*bsc.Peer, error) {
+	// If the peer does not support a compatible `bsc`, don't wait
+	if !peer.RunningCap(bsc.ProtocolName, bsc.ProtocolVersions) {
+		return nil, nil
+	}
+	// Ensure nobody can double connect
+	ps.lock.Lock()
+
+	id := peer.ID()
+	if _, ok := ps.peers[id]; ok {
+		ps.lock.Unlock()
+		return nil, errPeerAlreadyRegistered // avoid connections with the same id as existing ones
+	}
+	if _, ok := ps.bscWait[id]; ok {
+		ps.lock.Unlock()
+		return nil, errPeerAlreadyRegistered // avoid connections with the same id as pending ones
+	}
+	// If `bsc` already connected, retrieve the peer from the pending set
+	if bsc, ok := ps.bscPend[id]; ok {
+		delete(ps.bscPend, id)
+
+		ps.lock.Unlock()
+		return bsc, nil
+	}
+	// Otherwise wait for `bsc` to connect concurrently
+	wait := make(chan *bsc.Peer)
+	ps.bscWait[id] = wait
+	ps.lock.Unlock()
+
+	select {
+	case peer := <-wait:
+		return peer, nil
+
+	case <-time.After(extensionWaitTimeout):
+		// could be deadlock, so we use TryLock to avoid it.
+		if ps.lock.TryLock() {
+			delete(ps.bscWait, id)
+			ps.lock.Unlock()
+			return nil, errPeerWaitTimeout
+		}
+		// if TryLock failed, we wait for a while and try again.
+		for {
+			select {
+			case <-wait:
+				// discard the peer, even though the peer arrived.
+				return nil, errPeerWaitTimeout
+			case <-time.After(tryWaitTimeout):
+				if ps.lock.TryLock() {
+					delete(ps.bscWait, id)
+					ps.lock.Unlock()
+					return nil, errPeerWaitTimeout
+				}
+			}
+		}
+	}
+}
+
 // registerPeer injects a new `eth` peer into the working set, or returns an error
 // if the peer is already known.
-func (ps *peerSet) registerPeer(peer *eth.Peer, ext *snap.Peer) error {
+func (ps *peerSet) registerPeer(peer *eth.Peer, ext *snap.Peer, bscExt *bsc.Peer) error {
 	// Start tracking the new peer
 	ps.lock.Lock()
 	defer ps.lock.Unlock()
@@ -202,6 +272,9 @@ func (ps *peerSet) registerPeer(peer *eth.Peer, ext *snap.Peer) error {
 	if ext != nil {
 		eth.snapExt = &snapPeer{ext}
 		ps.snapPeers++
+	}
+	if bscExt != nil {
+		eth.bscExt = &bscPeer{bscExt}
 	}
 	ps.peers[id] = eth
 	return nil
@@ -310,4 +383,19 @@ func (ps *peerSet) close() {
 		close(ps.quitCh)
 	}
 	ps.closed = true
+}
+
+// peersWithoutVote retrieves a list of peers that do not have a given
+// vote in their set of known hashes.
+func (ps *peerSet) peersWithoutVote(hash common.Hash) []*ethPeer {
+	ps.lock.RLock()
+	defer ps.lock.RUnlock()
+
+	list := make([]*ethPeer, 0, len(ps.peers))
+	for _, p := range ps.peers {
+		if p.bscExt != nil && !p.bscExt.KnownVote(hash) {
+			list = append(list, p)
+		}
+	}
+	return list
 }
