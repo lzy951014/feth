@@ -2,7 +2,7 @@
  * @Author: Liuzongyun 845666459@qq.com
  * @Date: 2024-11-12 10:35:59
  * @LastEditors: Liuzongyun 845666459@qq.com
- * @LastEditTime: 2024-11-12 10:41:59
+ * @LastEditTime: 2024-11-12 11:09:07
  * @FilePath: /feth/fparams/bootnodes.go
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
@@ -22,7 +22,7 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
 
-package fparams
+package params
 
 import "github.com/ethereum/go-ethereum/common"
 
