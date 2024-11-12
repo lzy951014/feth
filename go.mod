@@ -5,8 +5,10 @@ go 1.21.5
 require (
 	github.com/docker/docker v27.3.1+incompatible
 	github.com/ethereum/go-ethereum v1.13.14
+	github.com/go-stack/stack v1.8.0
 	github.com/golang/snappy v0.0.5-0.20220116011046-fa5810519dcb
 	github.com/gorilla/websocket v1.4.2
+	github.com/holiman/uint256 v1.2.4
 	github.com/huin/goupnp v1.3.0
 	github.com/jackpal/go-nat-pmp v1.0.2
 	github.com/julienschmidt/httprouter v1.3.0
@@ -46,7 +48,6 @@ require (
 	github.com/golang-jwt/jwt/v4 v4.5.0 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/hashicorp/go-bexpr v0.1.10 // indirect
-	github.com/holiman/uint256 v1.2.4 // indirect
 	github.com/klauspost/compress v1.15.15 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect

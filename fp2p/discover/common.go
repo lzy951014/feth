@@ -31,7 +31,7 @@ import (
 
 	// "github.com/ethereum/go-ethereum/params"
 	"github.com/ethereum/go-ethereum/rlp"
-	params "github.com/lzy951014/feth/fparams"
+	"github.com/lzy951014/feth/params"
 )
 
 // UDPConn is a network connection on which discovery can operate.
