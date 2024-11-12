@@ -27,7 +27,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/common/math"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/p2p/enode"
+	"github.com/lzy951014/feth/fp2p/enode"
 	"golang.org/x/crypto/hkdf"
 )
 

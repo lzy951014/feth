@@ -23,11 +23,11 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/common/mclock"
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/p2p/enode"
-	"github.com/ethereum/go-ethereum/p2p/enr"
-	"github.com/ethereum/go-ethereum/p2p/netutil"
 	"github.com/lzy951014/feth/fcore/forkid"
+	"github.com/lzy951014/feth/fp2p/enode"
+	"github.com/lzy951014/feth/fp2p/enr"
+	"github.com/lzy951014/feth/fp2p/netutil"
+	"github.com/lzy951014/feth/log"
 
 	// "github.com/ethereum/go-ethereum/params"
 	"github.com/ethereum/go-ethereum/rlp"

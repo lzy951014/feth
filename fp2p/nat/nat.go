@@ -27,8 +27,8 @@ import (
 
 	"github.com/lzy951014/feth/fcommon/gopool"
 
-	"github.com/ethereum/go-ethereum/log"
 	natpmp "github.com/jackpal/go-nat-pmp"
+	"github.com/lzy951014/feth/log"
 )
 
 // Interface An implementation of nat.Interface can map local ports to ports

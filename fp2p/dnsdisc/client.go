@@ -30,9 +30,9 @@ import (
 	"github.com/ethereum/go-ethereum/common/lru"
 	"github.com/ethereum/go-ethereum/common/mclock"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/p2p/enode"
-	"github.com/ethereum/go-ethereum/p2p/enr"
+	"github.com/lzy951014/feth/fp2p/enode"
+	"github.com/lzy951014/feth/fp2p/enr"
+	"github.com/lzy951014/feth/log"
 	"golang.org/x/sync/singleflight"
 	"golang.org/x/time/rate"
 )

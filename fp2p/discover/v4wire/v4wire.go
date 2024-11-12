@@ -29,9 +29,9 @@ import (
 
 	"github.com/ethereum/go-ethereum/common/math"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/p2p/enode"
-	"github.com/ethereum/go-ethereum/p2p/enr"
 	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/lzy951014/feth/fp2p/enode"
+	"github.com/lzy951014/feth/fp2p/enr"
 )
 
 // RPC packet types
