@@ -42,6 +42,7 @@ import (
 	"github.com/ethereum/go-ethereum/metrics"
 	"github.com/ethereum/go-ethereum/p2p"
 	"github.com/ethereum/go-ethereum/triedb/pathdb"
+	fcore "github.com/lzy951014/feth/fcore"
 	typess "github.com/lzy951014/feth/fcore/types"
 	"github.com/lzy951014/feth/feth/protocols/bsc"
 )
@@ -91,7 +92,7 @@ type votePool interface {
 
 	// SubscribeNewVoteEvent should return an event subscription of
 	// NewVotesEvent and send events to the given channel.
-	SubscribeNewVoteEvent(ch chan<- core.NewVoteEvent) event.Subscription
+	SubscribeNewVoteEvent(ch chan<- fcore.NewVoteEvent) event.Subscription
 }
 
 // handlerConfig is the collection of initialization parameters to create a full

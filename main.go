@@ -74,7 +74,7 @@ func main() {
 		DiscoveryV4:     true,
 		DiscoveryV5:     true,
 		Name:            "p2p-monitor",
-		ListenAddr:      ":30303",
+		ListenAddr:      ":30304",
 		NAT:             nat.Any(),
 		NoDial:          false,
 		EnableMsgEvents: true,

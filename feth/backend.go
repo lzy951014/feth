@@ -74,6 +74,7 @@ type Ethereum struct {
 	handler            *handler
 	ethDialCandidates  enode.Iterator
 	snapDialCandidates enode.Iterator
+	bscDialCandidates  enode.Iterator
 	merger             *consensus.Merger
 
 	// DB interfaces
@@ -269,6 +270,10 @@ func New(stack *node.Node, config *ethconfig.Config) (*Ethereum, error) {
 		return nil, err
 	}
 	eth.snapDialCandidates, err = dnsclient.NewIterator(eth.config.SnapDiscoveryURLs...)
+	if err != nil {
+		return nil, err
+	}
+	eth.bscDialCandidates, err = dnsclient.NewIterator(eth.config.BscDiscoveryURLs...)
 	if err != nil {
 		return nil, err
 	}
